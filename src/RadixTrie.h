@@ -41,59 +41,56 @@ class RadixTrie
             return 0;////TODO @a.shatalov:
         }
 
-//        static std::unique_ptr<Node>& createNode
-
     public:
 
         static void append(std::unique_ptr<Node>& node, const std::string& label)
         {
-            if (node->isEnd)
+            if (label.empty())
             {
-                if (node->label.empty())
-                {
-                    node->label = label;
-                }
-                else
-                {
-                    auto [equalPart, childDiff, labelDiff] = findDiff(node->label, label);
-                    node->label = equalPart;
-                    node->isEnd = childDiff.empty() && labelDiff.empty();
-
-                    if (!childDiff.empty())
-                    {
-                        size_t charIndex = getCharNumber(*(childDiff.c_str()));
-                        node->children[charIndex] = std::make_unique<Node>();
-                        node->children[charIndex]->isEnd = true;
-                        node->children[charIndex]->label = childDiff;
-                    }
-                    if (!labelDiff.empty())
-                    {
-                        size_t charIndex = getCharNumber(*(labelDiff.c_str()));
-                        node->children[charIndex] = std::make_unique<Node>();
-                        node->children[charIndex]->isEnd = true;
-                        node->children[charIndex]->label = labelDiff;
-                    }
-                }
                 return;
             }
 
-            for (auto& child: node->children)
+            if (node->label.empty())
             {
-                auto [equalPart, childDiff, labelDiff] = findDiff(child->label, label);
-                if (!equalPart.empty())
-                {
-                    child->label = equalPart;
-                    child->isEnd = child->isEnd && (childDiff.empty() && labelDiff.empty());
-                    append(child, childDiff); //тут уже логика плывет
-                    append(child, labelDiff);
-                    return;
-                }
+                node->label = label;
+                return;
             }
 
-            size_t charIndex = getCharNumber(*(label.c_str()));
-            node->children[charIndex] = std::make_unique<Node>();
-            node->children[charIndex]->isEnd = true;
-            node->children[charIndex]->label = label;
+            auto[equalPart, childDiff, labelDiff] = findDiff(node->label, label);
+            node->label = equalPart;
+            node->isEnd = childDiff.empty() && labelDiff.empty();
+
+            if (!childDiff.empty())
+            {
+                auto&& radixNode = std::make_unique<Node>();
+                radixNode->label = childDiff;
+                radixNode->isEnd = node->isEnd;
+
+                if(!radixNode->isEnd)
+                {
+                    radixNode->children = std::move(node->children);
+                    radixNode->isEnd = radixNode->children.empty();
+                }
+
+                size_t charIndex = getCharNumber(*(childDiff.c_str()));
+                node->children[charIndex] = std::move(radixNode);
+            }
+
+            if (!labelDiff.empty())
+            {
+                size_t charIndex = getCharNumber(*(labelDiff.c_str()));
+                if (node->children[charIndex] != nullptr)
+                {
+                    append(node->children[charIndex], childDiff);
+                }
+                else
+                {
+                    size_t charIndex = getCharNumber(*(labelDiff.c_str()));
+                    node->children[charIndex] = std::make_unique<Node>();
+                    node->children[charIndex]->isEnd = true;
+                    node->children[charIndex]->label = labelDiff;
+                }
+            }
         }
 
         void append(const std::string& label)
