@@ -1,4 +1,4 @@
-#include "RadixTree.h"
+#include "RadixTrie.h"
 
 int main(int argc, char const *argv[])
 {
