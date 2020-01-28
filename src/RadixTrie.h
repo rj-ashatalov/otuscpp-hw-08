@@ -4,14 +4,15 @@
 #include <array>
 #include <string>
 #include <math.h>
+#include <iostream>
 
 
 class RadixTrie
 {
         struct Node
         {
-            std::string label;
-            bool isEnd{};
+            std::string label = "";
+            bool isEnd{false};
             std::array<std::unique_ptr<Node>, 26> children;
         };
 
@@ -22,7 +23,7 @@ class RadixTrie
         {
             auto length = std::min(lhs.size(), rhs.size());
             int diffIndex = 0;
-            for (int i = 0; i < length; ++i)
+            for (size_t i = 0; i < length; ++i)
             {
                 if (lhs[i] == rhs[i])
                 {
@@ -36,9 +37,10 @@ class RadixTrie
             return std::make_tuple(lhs.substr(0, diffIndex), lhs.substr(diffIndex), rhs.substr(diffIndex));
         }
 
-        static size_t getCharNumber(char ch)
+        static size_t getCharIndex(char ch)
         {
-            return 0;////TODO @a.shatalov:
+            static size_t firstChar = static_cast<size_t>('a');
+            return static_cast<size_t>(ch) - firstChar;
         }
 
     public:
@@ -50,46 +52,41 @@ class RadixTrie
                 return;
             }
 
+            if (!node)
+            {
+                node = std::make_unique<Node>();
+                node->label = label;
+                node->isEnd = true;
+                return;
+            }
+
             if (node->label.empty())
             {
-                node->label = label;
+                auto charIndex = getCharIndex(*(label.c_str()));
+                append(node->children[charIndex], label);
                 return;
             }
 
             auto[equalPart, childDiff, labelDiff] = findDiff(node->label, label);
             node->label = equalPart;
-            node->isEnd = childDiff.empty() && labelDiff.empty();
 
             if (!childDiff.empty())
             {
                 auto&& radixNode = std::make_unique<Node>();
                 radixNode->label = childDiff;
                 radixNode->isEnd = node->isEnd;
+                radixNode->children = std::move(node->children);
 
-                if(!radixNode->isEnd)
-                {
-                    radixNode->children = std::move(node->children);
-                    radixNode->isEnd = radixNode->children.empty();
-                }
-
-                size_t charIndex = getCharNumber(*(childDiff.c_str()));
+                size_t charIndex = getCharIndex(*(childDiff.c_str()));
                 node->children[charIndex] = std::move(radixNode);
             }
 
+            node->isEnd = equalPart == label;
+
             if (!labelDiff.empty())
             {
-                size_t charIndex = getCharNumber(*(labelDiff.c_str()));
-                if (node->children[charIndex] != nullptr)
-                {
-                    append(node->children[charIndex], childDiff);
-                }
-                else
-                {
-                    size_t charIndex = getCharNumber(*(labelDiff.c_str()));
-                    node->children[charIndex] = std::make_unique<Node>();
-                    node->children[charIndex]->isEnd = true;
-                    node->children[charIndex]->label = labelDiff;
-                }
+                size_t charIndex = getCharIndex(*(labelDiff.c_str()));
+                append(node->children[charIndex], labelDiff);
             }
         }
 
@@ -100,8 +97,54 @@ class RadixTrie
 
         void print()
         {
-            //todo
+            printInternal(root, "", "");
         }
 
+    private:
+        void printInternal(std::unique_ptr<Node>& node, std::string prefix, std::string border)
+        {
+            if (!node)
+            {
+                return;
+            }
+            std::cout << prefix;
+            std::cout << border;
+            std::cout << "\"" << node->label << "\"" << (node->isEnd ? "$" : "") << std::endl;
+
+            auto size = std::count_if(node->children.begin(), node->children.end(), [&](const auto& item)
+            {
+                return item != nullptr;
+            });
+
+            int index = 0;
+            for (auto& child:node->children)
+            {
+                if (child)
+                {
+                    printInternal(child, prefix + getPrefix(border), getBorder(index, size));
+                    ++index;
+                }
+            }
+        }
+
+        std::string getPrefix(const std::string& border)
+        {
+            if (border == "")
+            {
+                return "";
+            }
+
+            if (border == "└ ")
+            {
+                return "  ";
+            }
+
+            return "│ ";
+        }
+
+        std::string getBorder(size_t index, size_t size)
+        {
+            return (index < size - 1)? "├ " : "└ ";
+        }
 
 };
