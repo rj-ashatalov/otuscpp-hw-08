@@ -1,6 +1,6 @@
 #include "RadixTrie.h"
 
-int main(int argc, char const *argv[])
+int main(int, char const *[])
 {
     RadixTrie trie;
 
