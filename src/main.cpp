@@ -11,7 +11,7 @@ int main(int argc, char const *argv[])
         std::getline(std::cin, line);
         if (std::cin.eof())
         {
-            //TODO @a.shatalov: trie.printPrefixes()
+            trie.printWords();
             break;
         }
         trie.append(line);

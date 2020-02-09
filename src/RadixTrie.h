@@ -102,7 +102,34 @@ class RadixTrie
             printInternal(root, "", "");
         }
 
+        void printWords()
+        {
+            printNode(root, "");
+        }
+
     private:
+
+        void printNode(std::unique_ptr<Node>& node, std::string word)
+        {
+            if (!node)
+            {
+                return;
+            }
+
+            if (node->isEnd)
+            {
+                std::cout << word + node->label << " " << word + node->label.substr(0, 1) << std::endl;
+            }
+
+            for (auto& child:node->children)
+            {
+                if (child)
+                {
+                    printNode(child, word + node->label);
+                }
+            }
+        }
+
         void printInternal(std::unique_ptr<Node>& node, std::string prefix, std::string border)
         {
             if (!node)
@@ -146,7 +173,7 @@ class RadixTrie
 
         std::string getBorder(size_t index, size_t size)
         {
-            return (index < size - 1)? "├ " : "└ ";
+            return (index < size - 1) ? "├ " : "└ ";
         }
 
 };
