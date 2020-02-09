@@ -11,7 +11,7 @@ BOOST_AUTO_TEST_CASE(test_version)
     BOOST_CHECK(version() > 0);
 }
 
-BOOST_AUTO_TEST_CASE(test_trie_print)
+/*BOOST_AUTO_TEST_CASE(test_trie_print)
 {
     RadixTrie trie;
 
@@ -43,5 +43,5 @@ BOOST_AUTO_TEST_CASE(test_trie_print)
     trie.print();
 
     BOOST_CHECK(true);
-}
+}*/
 BOOST_AUTO_TEST_SUITE_END()
