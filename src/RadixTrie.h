@@ -68,20 +68,22 @@ class RadixTrie
             }
 
             auto[equalPart, childDiff, labelDiff] = findDiff(node->label, label);
-            node->label = equalPart;
-
-            if (!childDiff.empty())
+            if (node->label != equalPart)
             {
                 auto&& radixNode = std::make_unique<Node>();
                 radixNode->label = childDiff;
                 radixNode->isEnd = node->isEnd;
                 radixNode->children = std::move(node->children);
-
                 size_t charIndex = getCharIndex(*(childDiff.c_str()));
                 node->children[charIndex] = std::move(radixNode);
-            }
 
-            node->isEnd = equalPart == label;
+                node->label = equalPart;
+                node->isEnd = equalPart == label;
+            }
+            else
+            {
+                node->isEnd = node->isEnd || node->label == label;
+            }
 
             if (!labelDiff.empty())
             {
